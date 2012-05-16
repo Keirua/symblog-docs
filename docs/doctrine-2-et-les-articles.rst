@@ -5,13 +5,12 @@ Introduction
 ------------
 
 Dans ce chapitre, nous allons commencer à explorer le modèle d'article. Ce modèle sera implémenté en utilisant l'ORM (pour Object Relation Mapper, soit ``Lien Objet-Relation``) `Doctrine 2 <http://www.doctrine-project.org/projects/orm>`_ . 
-Doctrine 2 nous permet de faire persister nos objets PHP. Il propose également un dialecte SQL personnel appelé DQL (pour Doctrine Query Language, ou ``Langage de requêtes de Doctrine``). En plus de Doctrine 2, nous allons également aborder le concept de données factices (data fixtures). C'est un mécanisme qui permet de peupler la base de donnée de l'environnement de développement et de test avec des données de test adéquates. A la fin de ce chapitre nous aurons défini le modèle d'article et mis à jour la base de donnée afin qu'elle reflète ce changement, et créé des articles factices. Nous aurons également construit les bases de la page d'affichage des article.
+Doctrine 2 nous permet de faire persister nos objets PHP. Il propose également un dialecte SQL personnel appelé DQL (pour Doctrine Query Language, ou ``Langage de requêtes de Doctrine``). En plus de Doctrine 2, nous allons également aborder le concept de données factices (data fixtures). C'est un mécanisme permettant de peupler la base de donnée de l'environnement de développement et de test avec des données de test adéquates. A la fin de ce chapitre nous aurons défini le modèle d'article, mis à jour la base de donnée afin qu'elle reflète ce changement, et créé des articles factices. Nous aurons également construit les bases de la page d'affichage des article.
 
 Doctrine 2: Le modèle
 ---------------------
 
-Afin que notre blog fonction, il nous faut un moyen de faire persister les données. Doctrine 2 fournit une librairie d'ORM conçue exactement dans cette optique. Doctrine 2 est conçu par dessus une très puissante
-`couche d'abstraction de base de donnée <http://www.doctrine-project.org/projects/dbal>`_ qui la rend indépendante de la base de donnée utilisée : cela permet d'utiliser différents moteurs de stockage tels que MySQL, PostgreSQL ou SQLite. Nous allons utiliser MySQL dans ce tutorial, mais n'importe quel moteur peut être utilisé à la place.
+Afin que notre blog fonctionne, il nous faut un moyen de faire persister les données. Doctrine 2 fournit une librairie d'ORM conçue exactement dans cette optique. Doctrine 2 est conçu au dessus d'une `couche d'abstraction de base de donnée <http://www.doctrine-project.org/projects/dbal>`_ très puissante qui la rend indépendante de la base de donnée utilisée : cela permet d'utiliser différents moteurs de stockage tels que MySQL, PostgreSQL ou SQLite. Nous allons utiliser MySQL dans ce tutorial, mais n'importe quel moteur peut être utilisé à la place.
 
 .. tip::
 
@@ -21,8 +20,7 @@ Afin que notre blog fonction, il nous faut un moyen de faire persister les donn�
 
     "Un mapping objet-relationnel (en anglais object-relational mapping ou ORM) est une technique de programmation informatique qui crée l'illusion d'une base de données orientée objet à partir d'une base de données relationnelle en définissant des correspondances entre cette base de données et les objets du langage utilisé. On pourrait le désigner par `` correspondance entre monde objet et monde relationnel ``"
     
-	Ce qu'un ORM facilite, c'est la traduction des données d'une base de donnée relationnelle en des objets PHP que l'on peut manipuler. Cela permet d'encapsuler des opérations que l'on souhaite réaliser sur une table à l'intérieur d'une classe. Prenons l'exemple d'une table pour les utilisateurs. Elle contiendra probablement des chamsp tels que le nom d'utilisateur, son mot de passe, son nom et sa date de naissance. L'orm va nous permettre, dans la classe PHP, d'appeller des méthodes ``getUsername()`` 
-	ou ``setPassword()``. Les ORM vont bien plus loin que cela néanmoins, elles permettent de retrouver des entités liées pour nous, soit au moment où l'on charge l'entité utilisateur, soit de manière paresseuse par la suite. Maintenant imaginons que notre utilisateur a des amis qui lui sont liés. Il peut y avoir une table d'amis, où est stockée la clée primaire de la table utilisateur. L'ORM nous permet d'utiliser une méthode telle que ``$user->getFriends()`` pour récupérer les objets de la table d'amis. Si cela ne suffit pas, l'ORM se charge également de la persistance, ce qui nous permet de créer des objets PHP, d'appeler une méthode de sauvegarde (du genre ``save()``), et de laisser l'ORM s'occuper des détails pour la sauvegarde dans la base de données. Comme nous allons utiliser Doctrine 2 comme librairie d'ORM, vous allez devenir plus à l'aise avec cette notion au cours de ce tutoriel.
+	Ce qu'un ORM facilite, c'est la traduction des données d'une base de donnée relationnelle en des objets PHP que l'on peut manipuler. Cela permet d'encapsuler des opérations que l'on souhaite réaliser sur une table à l'intérieur d'une classe. Prenons l'exemple d'une table pour gérer les utilisateurs. Elle contiendra probablement des champs tels que le nom d'utilisateur, son mot de passe, son nom et sa date de naissance. L'orm va nous permettre d'appeller des méthodes ``getUsername()`` ou ``setPassword()`` dans la classe PHP. Les ORM vont bien plus loin que cela néanmoins, ils permettent de retrouver des entités liées pour nous, soit au moment où l'on charge l'entité utilisateur, soit de manière retardée par la suite. Maintenant imaginons que notre utilisateur a des amis qui lui sont liés. Il peut y avoir une table d'amis, où est stockée la clée primaire de la table utilisateur. L'ORM nous permet d'utiliser une méthode telle que ``$user->getFriends()`` pour récupérer les objets de la table d'amis. Si cela ne suffit pas, l'ORM se charge également de la persistance, ce qui nous permet de créer des objets PHP, d'appeler une méthode de sauvegarde (du genre ``save()``), et de laisser l'ORM s'occuper des détails pour la sauvegarde dans la base de données. Comme nous allons utiliser Doctrine 2 comme librairie d'ORM, vous allez devenir plus à l'aise avec cette notion au cours de ce tutoriel.
 
 .. note::
 
@@ -131,14 +129,14 @@ Avant de lancer cette commande, il faut expliquer à Doctrine 2 comment l'entit�
         protected $updated;
     }
 
-Tout d'abord, on importe et crée un alias pour l'espace de nom de Doctrine 2. Cela nous permet d'utiliser les ``annotations`` pour décrire les métadonnées des entités. Les métadonnées nous fournissent des informations sur comment les membres sont représentés dans la base de donnée.
+Tout d'abord, on importe et crée un alias pour l'espace de nom de Doctrine 2. Cela nous permet d'utiliser les ``annotations`` pour décrire les métadonnées des entités. Les métadonnées nous fournissent des informations sur la manière dont les membres sont représentés dans la base de donnée.
 
 .. tip::
 
     Nous venons seulement de voir un petit sous ensemble des types d'association que propose Doctrine 2. Une `liste complète <http://www.doctrine-project.org/docs/orm/2.0/en/reference/basic-mapping.html#doctrine-mapping-types>`_
-    est disponible sur le site web de Doctrine 2. Nous allons utiliser d'autres types d'association plus tard dans ce tutorial.
+    est disponible sur le site web de Doctrine 2. Nous allons utiliser d'autres types d'association plus tard dans ce tutoriel.
 	
-L'oeil averti aura sûrement remarqué que l'attribut ``$comments`` n'a pas de métadonnées associes. C'est car il n'est pas nécessaire de le faire persister dans la base de données. Il fournit en effet seulement une liste des commentaires relatifs à un article. Si l'on pense en terme d'objet et non de base de donnée, cela prend tout son sens, comme vous pouvez le voir dans le bout de code suivant :
+L'oeil averti aura sûrement remarqué que l'attribut ``$comments`` n'a pas de métadonnées associées. Nous ne souhaitons pas le faire persister dans la base de données. En effet, il fournit seulement une liste des commentaires relatifs à un article. Si l'on pense en terme d'objet et non de base de données, cela prend tout son sens, comme vous pouvez le voir dans le bout de code suivant :
 
 .. code-block:: php
 
@@ -153,7 +151,7 @@ L'oeil averti aura sûrement remarqué que l'attribut ``$comments`` n'a pas de m
     $comment->setComment("Symfony2 rocks!");
     $blog->addComment($comment);
 
-La portion de code ci dessus présente le comporte normal que l'on pourrait avoir d'une classe d'article et de commentaires. En interne, la méthode ``$blog->addComment()`` pourrait être implémentée comme ceci :
+La portion de code ci-dessus illustre le comporte normal que l'on pourrait souhaiter d'une classe d'article et de commentaires. En interne, la méthode ``$blog->addComment()`` pourrait être implémentée comme ceci :
 
 .. code-block:: php
 
@@ -167,7 +165,7 @@ La portion de code ci dessus présente le comporte normal que l'on pourrait avoi
         }
     }
 
-La méthode ``addComment`` se contente d'ajouter un objet ``Commentaire`` à la variable membre ``$comments`` de l'article. Récupérer les commentaires est alors très simple :
+La méthode ``addComment`` se contente d'ajouter un objet ``Comment`` à la variable membre ``$comments`` de l'article. Récupérer les commentaires est alors très simple :
 
 .. code-block:: php
 
@@ -213,7 +211,7 @@ La base de données
 Création de la base de données
 ..............................
 
-Si vous avez suivi le chapitre 1 de ce tutorial, vous avez dû utiliser l'outil de configuration web pour rentrer les paramètres de la base de donnée. Si vous ne l'avez pas fait, mettez à jour les options ``database_*`` dans le fichier de configuration ``app/parameters.ini``.
+Si vous avez suivi le chapitre 1 de ce tutoriel, vous avez dû utiliser l'outil de configuration web pour rentrer les paramètres de la base de donnée. Si vous ne l'avez pas fait, mettez à jour les options ``database_*`` dans le fichier de configuration ``app/parameters.ini``.
 
 Il est maintenant temps de créer la base de donnée en utilisant une autre commande Doctrine 2. Cette commande crée seulement la base de données, mais pas les tables à l'intérieur. Si une base de donnée du même nom existe déjà, une erreur sera affichée et la base de donnée existante restera intacte.
 
@@ -221,7 +219,7 @@ Il est maintenant temps de créer la base de donnée en utilisant une autre comm
 
     $ php app/console doctrine:database:create
 
-Nous sommes maintenant prêts pour créer la représentation de l'entité ``Blog`` dans la base de données. Il y a 2 moyens de faire cela. Nous pouvons soit utiliser la commande ``schema`` de  Doctrine 2 pour mettre à jour la base de donnée, ou bien utiliser les bien plus puissantes migrations de Doctrine 2. Pour le moment, nous allons nous contenter de la commande ``schema``, les migrations seront abordées dans un chapitre ultérieur.
+Nous sommes maintenant prêts pour créer la représentation de l'entité ``Blog`` dans la base de données. Il y a 2 moyens pour faire cela. Nous pouvons utiliser la commande ``schema`` de  Doctrine 2 pour mettre à jour la base de donnée, ou bien les nettement plus puissantes migrations de Doctrine 2. Pour le moment, contentons nous de la commande ``schema``, les migrations seront abordées dans un chapitre ultérieur.
 
 Création de la table d'article
 ..............................
@@ -232,7 +230,7 @@ Pour créer la table ``blog`` dans notre base de données, on peut lancer la com
 
     $ php app/console doctrine:schema:create
 
-Cela exécute le code SQL nécessaire à la génération du schéma de la base de donnée pour l'entité ``blog``. Vous pouvez également ajouter l'argument ``--dump-sql`` optionnellement afin d'afficher le code SQL généré. Si vous regardez maintenant le contenu de votre base de données, vous pourrez voir que la table ``blog`` a été créée, avec des champs qui correspondent à ce que nous avions spécifié.
+Cela exécute le code SQL nécessaire à la génération du schéma de la base de donnée pour l'entité ``blog``. Vous pouvez également ajouter l'argument ``--dump-sql`` optionnellement afin d'afficher le code SQL généré. Si vous regardez le contenu de votre base de données, vous pourrez voir que la table ``blog`` a été créée, avec des champs qui correspondent à ce que nous avions spécifié.
 
 .. tip::
 
@@ -242,7 +240,7 @@ Cela exécute le code SQL nécessaire à la génération du schéma de la base d
 
         $ php app/console doctrine:schema:create --help
 
-    Les informations d'aide vont alors afficher l'usage et les options disponible. La plupart des commandes proposent un grand nombre d'options qui permettent de personnaliser l'exécution d'une commande.
+    Les informations d'aide vont alors afficher l'usage et les options disponible. La plupart des commandes proposent un grand nombre d'options permettant de personnaliser l'exécution d'une commande.
 
 Intégration du Modèle avec la Vue : affichage d'un article
 ----------------------------------------------------------
@@ -252,7 +250,7 @@ Maintenant que l'entité ``Blog`` a été créée et que la base de donnée le r
 La route d'affichage d'un article
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Nous allons commencer par créer une route pour l'action ``show``. Un article va être identifié par un identifiant unique, cet identifiant se doit donc d'être présent dans l'URL. Mettez à jour les règles de routage du ``BloggerBlogBundle`` dans ``src/Blogger/BlogBundle/Resources/config/routing.yml`` en y ajoutant ce qui suit:
+Nous allons commencer par créer une route pour l'action ``show``. Un article va être caractérisé par un identifiant unique, cet identifiant se doit donc d'être présent dans l'URL. Mettez à jour les règles de routage du ``BloggerBlogBundle`` dans ``src/Blogger/BlogBundle/Resources/config/routing.yml`` en y ajoutant ce qui suit:
 with the following
 
 .. code-block:: yaml
@@ -265,12 +263,12 @@ with the following
             _method:  GET
             id: \d+
 
-Comme l'identifiant de l'article doit être présent dans l'URL, nous avons précisé un qu'un élément ``id`` serait présent. Sans plus de détails, cela signifie que les adresse ``http://symblog.co.uk/1`` et ``http://symblog.co.uk/my-blog`` valident toute les deux la route. Comme nous savons que l'identifiant est un entier (c'est ce que l'on a défini dans le mapping), on peut ajouter une contrainte qui ne valide la route que si le paramètre ``id`` est un entier. C'est réalisé grâce à la ligne ``id: \d+`` dans la section ``requirements``, qui définit des conditions à valider. Maintenant, seul la première adresse serait valide. Vous pouvez également voir que lorsque l'adresse valide cette route, c'est la méthode ``show`` du controller ``Blog`` du ``BloggerBlogBundle`` qui est executée. Plus qu'à créer le controlleur ``Blog``, c'est ce que nous allons faire tout de suite.
+Comme l'identifiant de l'article sera présent dans l'URL, nous avons ajouté un élément ``id`` dans la route. Sans plus de détail, cela signifie que les adresses ``http://symblog.co.uk/1`` et ``http://symblog.co.uk/my-blog`` valident toutes les deux la route. Comme nous savons que l'identifiant est un entier (c'est ce que l'on a défini dans le mapping), on peut ajouter une contrainte qui ne valide la route que si le paramètre ``id`` est un entier. C'est réalisé grâce à la ligne ``id: \d+`` dans la section ``requirements``, qui définit les conditions à valider. Maintenant, seule la première adresse serait valide. Vous pouvez également voir que lorsque l'adresse valide cette route, c'est la méthode ``show`` du contrôleur ``Blog`` du ``BloggerBlogBundle`` qui est executée. Il ne reste plus qu'à créer le contrôleur ``Blog``, c'est ce que nous allons faire tout de suite.
 
-L'action ``Show`` du Controlleur
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+L'action ``Show`` du Contrôleur
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Le lien entre le Modèle et la Vue, c'est le Controlleur, c'est donc là que nous allons commencer à créer la page d'affichage. Nous pourrions ajouter l'action ``show`` à notre controlleur ``Page`` déjà existant, mais comme cette page se contente d'afficher les entités ``blog``, cela a plus de sens de le mettre dans un controlleur à part.
+Le lien entre le Modèle et la Vue, c'est le Contrôleur, c'est donc là que nous allons commencer à créer la page d'affichage. Nous pourrions ajouter l'action ``show`` à notre contrôleur ``Page`` déjà existant, mais comme cette page se contente d'afficher les entités ``blog``, cela a plus de sens de le mettre dans un contrôleur à part.
 
 Créez un nouveau fichier dans ``src/Blogger/BlogBundle/Controller/BlogController.php`` et collez-y le code suivant :
 
@@ -307,11 +305,11 @@ Créez un nouveau fichier dans ``src/Blogger/BlogBundle/Controller/BlogControlle
         }
     }
 
-Nous avons crée un nouveau controlleur pour l'entité ``Blog``, et y avons défini une action ``show``. Comme nous avons spécifié un paramètre ``id`` pour la route ``BloggerBlogBundle_blog_show``, ce paramètre sera passé en argument à la méthode ``showAction``. Si nous avions passé plusieurs paramètres dans la règle de routage, ils auraient également été fournis sous la forme d'arguments séparés. 
+Nous avons créé un nouveau contrôleur pour l'entité ``Blog``, et y avons défini une action ``show``. Comme nous avons spécifié un paramètre ``id`` pour la route ``BloggerBlogBundle_blog_show``, ce paramètre sera passé en argument à la méthode ``showAction``. Si nous avions passé plusieurs paramètres dans la règle de routage, ils auraient également été fournis sous la forme d'arguments séparés. 
 
 .. tip::
 
-    Les actions du controlleur fournissent également un objet de type ``Symfony\Component\HttpFoundation\Request`` si vous le spécifiez parmi les paramètres. Cela peut être utile lorsque l'on traite avec les formulaires. Nous en avons déjà utilisé dans le chapitre 2, mais nous ne nous sommes pas servis de cette méthode car nous avons utilisé une des méthodes d'aide du controlleur de base 
+    Les actions du contrôleur fournissent également un objet de type ``Symfony\Component\HttpFoundation\Request`` si vous le spécifiez parmi les paramètres. Cela peut être utile lorsque l'on traite avec les formulaires. Nous en avons déjà utilisé dans le chapitre 2, mais nous ne nous sommes pas servis de cette méthode car nous avons utilisé une des méthodes d'aide du contrôleur de base 
     ``Symfony\Bundle\FrameworkBundle\Controller\Controller`` comme suit :
 
     .. code-block:: php
@@ -339,13 +337,13 @@ Nous avons crée un nouveau controlleur pour l'entité ``Blog``, et y avons déf
     Les deux méthodes réalisent la même tâche, mais si votre controlleur n'étendait pas la classe de base ``Symfony\Bundle\FrameworkBundle\Controller\Controller``, vous ne pourriez pas utiliser la première méthode.
 
 Il nous faut ensuite récupérer les entités ``Blog`` dans la base de données. Nous utilisons pour cela une seconde méthode de la classe ``Symfony\Bundle\FrameworkBundle\Controller\Controller`` pour obtenir le gestionnaire d'entités de Doctrine 2. Le but du 
-`gestionnaire d'entités <http://www.doctrine-project.org/docs/orm/2.0/en/reference/working-with-objects.html>`_ est de récupérer les objets venant de la base de donnée, et de les y faire persister. Nous utilisons ensuite l'objet ``EntityManger`` pour obtenir le ``Repository`` de Doctrine2 pour l'entité ``BloggerBlogBundle:Blog``. La syntaxe spécifiée ici est simplement un raccourci qui peut être utilisé avec Doctrine 2 au lieu de préciser le nom entier, c'est à dire ``Blogger\BlogBundle\Entity\Blog``. Avec le dépot d'objets (le repository), nous appelons la méthode ``find()`` avec pour argument la variable ``$id``. Cette méthode se charge de retrouver tous les objets à partir de leur clé primaire.
+`gestionnaire d'entités <http://www.doctrine-project.org/docs/orm/2.0/en/reference/working-with-objects.html>`_ est de récupérer les objets venant de la base de données, et de les y faire persister. Nous utilisons ensuite l'objet ``EntityManger`` pour obtenir le ``Repository`` de Doctrine2 pour l'entité ``BloggerBlogBundle:Blog``. La syntaxe spécifiée ici est simplement un raccourci qui peut être utilisé avec Doctrine 2 au lieu de préciser le nom entier, c'est à dire ``Blogger\BlogBundle\Entity\Blog``. Avec le dépot d'objets (le repository), nous appelons la méthode ``find()`` avec pour argument la variable ``$id``. Cette méthode se charge de retrouver tous les objets à partir de leur clé primaire.
 
 Enfin, nous vérifions qu'une entité a été trouvé, et fournissons cette entité à la vue. Si aucune entité n'est trouvée, une exception est lancée, qui va se charger de générer une ``erreur 404``.
 
 .. tip::
 
-    L'objet repository (le dépot d'objet) nous donne accès à un certain nombre de méthodes auxilliaires utiles, tel que :
+    L'objet repository (le dépot d'objet) nous donne accès à un certain nombre de méthodes auxilliaires utiles, telles que :
 
     .. code-block:: php
 
@@ -360,7 +358,7 @@ Enfin, nous vérifions qu'une entité a été trouvé, et fournissons cette enti
 La vue
 ~~~~~~
 
-Maintenant que nous avons construit l'action ``show`` pour le controlleur ``Blog``, nous pouvons nous concenter sur l'affichage des entités ``Blog``. Comme précisé dans l'action ``show``, le template ``BloggerBlogBundle:Blog:show.html.twig`` sera affiché. Commençons par créer ce fichier, dans ``src/Blogger/BlogBundle/Resouces/views/Blog/show.html.twig``, et ajoutons y le code qui suit :
+Maintenant que nous avons construit l'action ``show`` pour le contrôleur ``Blog``, nous pouvons nous concenter sur l'affichage des entités ``Blog``. Comme précisé dans l'action ``show``, le template ``BloggerBlogBundle:Blog:show.html.twig`` sera affiché. Commençons par créer ce fichier, dans ``src/Blogger/BlogBundle/Resouces/views/Blog/show.html.twig``, et ajoutons y le code qui suit :
 
 .. code-block:: html
     
@@ -387,7 +385,7 @@ Comme vous l'attendiez, nous commençons par étendre le template principale du 
 CSS
 ...
 
-Afin que la page d'affichage des articles soit agréable au regarde, il faut lui ajouter du style. Mettez à jour la feuille de style dans ``src/Blogger/BlogBundle/Resouces/public/css/blog.css`` avec le contenu suivant :
+Afin que la page d'affichage des articles soit visuellement agréable, il faut lui ajouter du style. Mettez à jour la feuille de style dans ``src/Blogger/BlogBundle/Resouces/public/css/blog.css`` avec le contenu suivant :
 
 .. code-block:: css
 
@@ -409,15 +407,15 @@ Afin que la page d'affichage des articles soit agréable au regarde, il faut lui
         $ php app/console assets:install web
 
 
-Comme nous avons maintenant construit le controlleur et la vue pour l'action ``show``, allons jeter un oeil à la page que nous venos de créer. Rendez vous avec votre navigateur à l'adresse ``http://symblog.dev/app_dev.php/1``. Ce n'est probablement pas la page que vous attendiez...
+Comme nous avons maintenant construit le contrôleur et la vue pour l'action ``show``, allons jeter un oeil à la page que nous venons de créer. Rendez vous avec votre navigateur à l'adresse ``http://symblog.dev/app_dev.php/1``. Ce n'est probablement pas la page que vous attendiez...
 
 .. image:: /_static/images/part_3/404_not_found.jpg
     :align: center
     :alt: Symfony2 404 Not Found Exception
 
-Symfony2 a généré une erreur 404. Comme il n'y a rien dans la base de donnée, il n'y a pas d'entité ayant pour ``id`` la valeur 1.
+Symfony2 a généré une erreur 404. Comme il n'y a rien dans la base de données, il n'y a pas d'entité ayant pour ``id`` la valeur 1.
 
-Vous pourriez simplement ajouter un élément dans la table ``blog`` de votre base de donnée, mais nous allons faire mieux. Nous servir de données factices, également appelées les ``data fixtures``.
+Vous pourriez simplement ajouter un élément dans la table ``blog`` de votre base de données, mais nous allons faire mieux. Nous servir de données factices, également appelées les ``data fixtures``.
 
 Données factices
 -------------
@@ -440,7 +438,7 @@ Maintenant, mettez à jour les vendors pour que les changements soient pris en c
 
     $ php bin/vendors install
 
-Cela va télécharger les dernières versions disponible si Github de chacun des bundles, et les installer au bon endroit.
+Cela va télécharger les dernières versions disponible sur Github de chacun des bundles, et les installer au bon endroit.
 
 .. note::
 
@@ -451,7 +449,7 @@ Cela va télécharger les dernières versions disponible si Github de chacun des
     Pour le DoctrineFixturesBundle: `Téléchargez <https://github.com/symfony/DoctrineFixturesBundle>`_ la version actuelle disponible sur Github, et décompressez son contenu dans ``vendor/bundles/Symfony/Bundle/DoctrineFixturesBundle``.
 
 Mettez ensuite à jour le fichier ``app/autoloader.php`` pour enregistrer les nouveaux espaces de noms.
-Comme les sont également dans l'espace de nom ``Doctrine\Common``, ils doivent être placé avant la directive ``Doctrine\Common`` déjà existante, puisqu'elle précisent un nouveau chemin. Les espaces de noms sont vérifiés de haut en bas, donc les espaces de noms les plus spécifiques doivent être enregistrés avant ceux qui le sont moins.
+Comme les ``DataFixtures`` sont également dans l'espace de nom ``Doctrine\Common``, ils doivent être placé avant la directive ``Doctrine\Common`` déjà existante, puisqu'elle précisent un nouveau chemin. Les espaces de noms sont vérifiés de haut en bas, donc les espaces de noms les plus précis doivent être enregistrés avant ceux qui le sont moins.
 
 .. code-block:: php
 
@@ -482,7 +480,7 @@ Maintenant enregistrons le ``DoctrineFixturesBundle`` dans le noyeau situé dans
 Articles factices
 ~~~~~~~~~~~~~~~~~
 
-Nous sommes maintenant prêts à définir du contenu factice pour nos articles. Créez un fichier de fixtures dans ``src/Blogger/BlogBundle/DataFixtures/ORM/BlogFixtures.php`` et ajoutez-y le contenu suivant :
+Nous sommes maintenant prêts à définir du contenu factice pour nos articles. Créez un fichier de ``fixtures`` dans ``src/Blogger/BlogBundle/DataFixtures/ORM/BlogFixtures.php`` et ajoutez-y le contenu suivant :
 
 .. code-block:: php
 
@@ -553,7 +551,7 @@ Nous sommes maintenant prêts à définir du contenu factice pour nos articles. 
     
     }
 
-Ce fichier contient un certain nombre de choses importantes à savoir lorsque l'on utilise Doctrine 2, en particulier sur comment faire persister les entités dans la base de donnée.
+Ce fichier contient un certain nombre de choses importantes à savoir lorsque l'on utilise Doctrine 2, en particulier sur comment faire persister les entités dans la base de données.
 
 Regardons comment on crée un article :
 
@@ -572,11 +570,7 @@ Regardons comment on crée un article :
 
     $manager->flush();
 
-On commence par créer une instance de la classe ``Blog``, et spécifie les valeurs pour ses attributs. A cet instant, Doctrine 2 ne connait rien de l'objet ``Entity``. C'est seulement lorsque l'on appelle ``$manager->persist($blog1)`` que l'on informe Doctrine 2 qu'il doit commencer à s'occuper des objets entité. L'objet ``$manager`` est ici une instance de ``EntityManager`` que nous avons vu plus tôt, lorsque nous allons chercher dans objets dans la base de donnée. Il est important de noter que bien que Doctrine 2 soit désormais conscient de l'objet entité, cet objet n'est toujours pas persisté dans la base de donnée, un appel à ``$manager->flush()`` est nécessaire pour cela. La méthode flush oblige Doctrine 2 à intéragir avec la base de donnée pour toute les entités dont il s'occupe. Par souci de performances, il est nécessaire de regrouper les appels Doctrine 2 et réaliser un unique flush, c'est comme ça que nous avons fait avec nos données factices. On crée chaque entité, dit à Doctrine 2 qu'il en a la charge, et finalement sauvegarde toutes les entités en une fois à la fin via ``flush``.
-
-.. tip:
-
-    Vous avez peut-être remarqué que les affectations des attributs ``created`` et ``updated``. Ce n'est absolument pas la meilleure manière de saisir ces champs, car ils devraient être définis automatiquement lorsqu'un objet est créé ou mis à jour. Doctrine 2 nous propose une manière de réaliser cela que nous allons rapidement aborder.
+On commence par créer une instance de la classe ``Blog``, et spécifie les valeurs pour ses attributs. A cet instant, Doctrine 2 ne connait rien de l'objet ``Entity``. C'est seulement lors de l'appel de ``$manager->persist($blog1)`` que Doctrine 2 prend en charge  les objets entité. L'objet ``$manager`` est ici une instance de ``EntityManager`` que nous avons vu plus tôt, lorsque nous allons chercher des objets entité dans la base de données. Il est important de noter que bien que Doctrine 2 soit désormais en charge de l'objet entité, cet objet n'est toujours pas persisté dans la base de donnée. Un appel à la méthode ``$manager->flush()`` est nécessaire pour cela. La méthode flush oblige Doctrine 2 à intéragir avec la base de donnée pour toute les entités dont il s'occupe. Par souci de performance, il est nécessaire de regrouper les appels Doctrine 2 et réaliser un unique flush, c'est comme ça que nous avons fait avec nos données factices. On crée chaque entité, on dit à Doctrine 2 qu'il en a la charge, et finalement on sauvegarde toutes les entités en une fois à la fin via ``flush``.
 
 Charger les données factices
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -595,20 +589,20 @@ Si vous regardez la page ``http://symblog.dev/app_dev.php/1``, vous devriez main
 
 Essayez de changer la valeur du paramètre ``id`` dans l'URL pour la valeur 2. Vous devriez alors voir l'article suivant.
 
-Si toutefois vous vous rendez à l'adresse ``http://symblog.dev/app_dev.php/100`` vous devriez avoir une erreur 404, car il n'existe pas d'entité ayant pour id la valeur 100. Maintenant, essayez l'URL ``http://symblog.dev/app_dev.php/symfony2-blog``. Pourquoi n'avons nous pas droit à une erreur 404 ? Car l'action show n'est jamais executée. L'url n'arrive pas à faire correspondre cette adresse à une règle de routage (à cause de la nécessité pour l'identifiant des articles d'être un entier), c'est pourquoi on a a la place une exception qui dit qu'il n'existe pas de route pour cette adresse: ``No route found for "GET /symfony2-blog"`` exception.
+Si toutefois vous vous rendez à l'adresse ``http://symblog.dev/app_dev.php/100`` vous devriez avoir une erreur 404, car il n'existe pas d'entité ayant pour id la valeur 100. Maintenant, essayez l'URL ``http://symblog.dev/app_dev.php/symfony2-blog``. Pourquoi n'avons nous pas droit à une erreur 404 ? Car l'action show n'est jamais executée. L'url n'arrive pas à faire correspondre cette adresse à une règle de routage (à cause de la nécessité pour l'identifiant des articles d'être un entier), c'est pourquoi on a à la place une exception qui dit: il n'existe pas de route pour cette adresse - ``No route found for "GET /symfony2-blog"``.
 
 Les Timestamps
 --------------
 
 Le terme le plus proche de Timestamp en français étant l'infame ``Horodatage``, je vais continuer d'utiliser le terme Timestamp. En gros, un timestamp, c'est un attribut qui sert à stocker une information sur une date. Pour finir ce chapitre, nous allons regarder les 2 timestamps de l'entité ``Blog``; ``created`` et ``updated``. Les fonctionnalités de ces 2 attributs sont communément définies comme ``Timestampable``. Promis, je vais quand même continuer de faire un effort pour les traductions, mais ne m'obligez pas à dire ``horodatables``. 
-Ces attributs stockent les informations sur quand l'article a été créé, puis mis à jour pour la dernière fois. Comme nous ne souhaitons pas mettre à jour ce champ manuellement à chaque création ou mise à jour d'article, nous allons nous reposer sur Doctrine.
+Ces attributs stockent les informations sur la date et l'heure auxquelles un article a été créé, puis mis à jour pour la dernière fois. Comme nous ne souhaitons pas mettre à jour ce champ manuellement à chaque création ou mise à jour d'article, nous allons nous reposer sur Doctrine.
 
 Doctrine 2 propose un
 `système d'évènements <http://www.doctrine-project.org/docs/orm/2.0/en/reference/events.html>`_
-qui fournit un
+qui fournit 
 `des callback de cycle de vie <http://www.doctrine-project.org/docs/orm/2.0/en/reference/events.html#lifecycle-callbacks>`_.
 
-On peut utiliser ces callback pour préciser que nos entités doivent être averties de certains évènements. Il est par exemple possible d'être prévenu avant la mise à jour d'une entité, après une sauvegarde ou avant la suppression d'une entité. Afin d'utiliser ces callback, il est nécessaire d'enregistrer les entités pour cela, ce que l'on fait dans les métadonnées. Mettez à jour l'entité ``Blog`` dans ``src/Blogger/BlogBundle/Entity/Blog.php`` avec le contenu suivant :
+On peut utiliser ces callback pour préciser que nos entités doivent être averties de certains évènements. Il est par exemple possible d'être prévenu avant la mise à jour d'une entité, après une sauvegarde ou avant la suppression d'une entité. Afin d'utiliser ces callback, il est nécessaire de marquer les entités, ce que l'on fait dans les métadonnées. Mettez à jour l'entité ``Blog`` dans ``src/Blogger/BlogBundle/Entity/Blog.php`` avec le contenu suivant :
 
 .. code-block:: php
 
@@ -668,11 +662,11 @@ On enregistre l'entité ``Blog`` afin d'être notifié de l'évènement ``preUpd
 
     Comme les attributs timestampables sont un besoin récurrent dans les entités, un bundle est apparu pour ajouter son support. Il s'agit du `StofDoctrineExtensionsBundle <https://github.com/stof/StofDoctrineExtensionsBundle>`_, qui fournit plusieurs extensions pour Doctrine 2 intéressante comme Timestampable, Sluggable, and Sortable (triable).
 
-    Nous verrons comment intégrer ce bundle plus loin dans le tutorial. Les plus pressés peuvent déjà regarder la page du `cookbook <http://symfony.com/doc/current/cookbook/doctrine/common_extensions.html>`_ à ce sujet.
+    Nous verrons comment intégrer ce bundle plus loin dans le tutoriel. Les plus pressés peuvent déjà regarder la page du `cookbook <http://symfony.com/doc/current/cookbook/doctrine/common_extensions.html>`_ à ce sujet.
 
 Conclusion
 ----------
 
 Nous avons couvert un certain nombre de concepts qui traitent du Modèle avec Doctrine 2. Nous avons également regardé comment générer des données factices, qui propose une solution simple pour avoir des données de test pour la période de développement et de test.
 
-La prochaine fois, nous regarderons comment étendre le modèle pour y ajouter le support des commentaires. Nous allons également commencer à construire la page d'accueil, et construire un dépot personnalisé pour cela. Nous parlerons également des migrations avec Doctrine, ainsi que des intéractions entre les formulaires et cette librairie pour permettre l'ajout de commentaires aux articles.
+La prochaine fois, nous regarderons comment étendre le modèle pour y ajouter le support des commentaires. Nous allons également commencer à construire la page d'accueil, et construire un dépôt personnalisé pour cela. Nous parlerons également des migrations avec Doctrine, ainsi que des intéractions entre les formulaires et cette librairie pour permettre l'ajout de commentaires aux articles.
