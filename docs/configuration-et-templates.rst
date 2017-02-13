@@ -132,7 +132,7 @@ Pour démarrer le générateur de bundle, utilisez la commande suivante. Des inf
 
 .. code-block:: bash
 
-    $ php app/console generate:bundle --namespace=Blogger/BlogBundle --format=yml
+    $ bin/console generate:bundle --namespace=Blogger/BlogBundle --format=yml
 
 Une fois le travail du générateur achevé, Symfony2 aura agencé pour vous les divers éléments de base de la structure du bundle. Un certain nombre de changements sont à noter ici.
 
@@ -173,7 +173,7 @@ Le routage du bundle a été importé dans le principal fichier de routage de l'
 .. code-block:: yaml
 
     # app/config/routing.yml
-    BloggerBlogBundle:
+    blogger_blog:
         resource: "@BloggerBlogBundle/Resources/config/routing.yml"
         prefix:   /
 
@@ -201,8 +201,9 @@ Le fichier de routage du ``BloggerBlogBundle`` situé dans
 
     # src/Blogger/BlogBundle/Resources/config/routing.yml
     BloggerBlogBundle_homepage:
-        pattern:  /hello/{name}
+        path:     /
         defaults: { _controller: BloggerBlogBundle:Default:index }
+
         
 Le routage est composé d'un motif et de paramètres par défaut. Le motif est comparé à l'URL, les paramètres désignent quel contrôleur exécuter lorsque la route est éligible. Dans le motif ``/hello/{name}``, le substitut ``{name}`` va correspondre à n'importe quelle type de valeur car rien de spécifique n'a été précisé. Cette route ne précise également aucune culture, format ou méthode HTTP. Comme aucune méthode HTTP n'est précisée, les requêtes de type GET, POST, PUT ou autre sont éligibiles lors de la comparaison du motif.
 
@@ -229,11 +230,12 @@ Nous passons également la variable  ``$name`` au template via le paramètre ``a
 
     class DefaultController extends Controller
     {
-        public function indexAction($name)
+        public function indexAction()
         {
-            return $this->render('BloggerBlogBundle:Default:index.html.twig', array('name' => $name));
+            return $this->render('BloggerBlogBundle:Default:index.html.twig');
         }
     }
+
 
 Le template (la vue)
 ....................
@@ -243,7 +245,8 @@ Comme vous pouvez le voir, le template est très simple. Il affiche Hello, suivi
 .. code-block:: html
 
     {# src/Blogger/BlogBundle/Resources/views/Default/index.html.twig #}
-    Hello {{ name }}!
+    Hello World!
+
 
 Nettoyage
 ~~~~~~~~~
@@ -252,6 +255,15 @@ Comme nous n'avons pas besoin de certains des fichiers par défaut créés par l
 
 Le fichier du contrôleur ``src/Blogger/BlogBundle/Controller/DefaultController.php``
 peut être supprimé, ainsi que le répertoire pour la vue et son contenu ``src/Blogger/BlogBundle/Resources/views/Default/``. Finalement, supprimez la route définie dans ``src/Blogger/BlogBundle/Resources/config/routing.yml``
+
+De plus, Symfony cree pour nous un bundle par défaut AppBundle que nous allons maintenant supprimer :
+dans app/AppKernel.php, supprimer "new AppBundle\AppBundle(),"
+dans app/config/routing.yml, supprimer
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+
+On peut alors supprimer complètement le bundle par défaut en supprimant le répertoire src/AppBundle
 
 Template
 --------
@@ -434,7 +446,7 @@ Nous allons maintenant avancer vers la création de la présentation pour le bun
 .. code-block:: html
 
     {# src/Blogger/BlogBundle/Resources/views/layout.html.twig #}
-    {% extends '::base.html.twig' %}
+    {% extends 'base.html.twig' %}
 
     {% block sidebar %}
         Sidebar content
@@ -487,7 +499,7 @@ Maintenant ajoutons une route pour notre page d'accueil. Mettez à jour la confi
 
     # src/Blogger/BlogBundle/Resources/config/routing.yml
     BloggerBlogBundle_homepage:
-        pattern:  /
+        path: /
         defaults: { _controller: BloggerBlogBundle:Page:index }
         requirements:
             _method:  GET
@@ -518,10 +530,10 @@ Lors de la création d'une nouvelle page, une des premières tâches devrait êt
 
     # src/Blogger/BlogBundle/Resources/config/routing.yml
     BloggerBlogBundle_about:
-        pattern:  /about
-        defaults: { _controller: BloggerBlogBundle:Page:about }
-        requirements:
-            _method:  GET
+    path:  /about
+    defaults: { _controller: BloggerBlogBundle:Page:about }
+    requirements:
+        _method:  GET
 
 Le contrôleur
 ~~~~~~~~~~~~~
