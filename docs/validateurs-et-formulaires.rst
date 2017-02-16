@@ -160,19 +160,22 @@ Comme vous pouvez le voir cette classe définit simplement quelques membres prot
 
 .. note::
 
-    Faisons une petite digression pour parler de l'utilisation des espaces de nom dans Symfony2. La classe d'entité que nous avons créée est définie par l'espace de nom ``Blogger\BlogBundle\Entity``. Comme le chargement automatique de Symfony2 supporte le `standard PSR-0 <http://groups.google.com/group/php-standards/web/psr-0-final-proposal?pli=1>`_, l'espace de nom reflète directement la structure de répertoires du bundle. La classe d'entité ``Enquiry`` est située dans ``src/Blogger/BlogBundle/Entity/Enquiry.php``, ce qui permet à Symfony2 de charger cette classe automatiquement de manière correcte.
+    Faisons une petite digression pour parler de l'utilisation des espaces de nom dans Symfony2. La classe d'entité que nous avons créée est définie par l'espace de nom ``Blogger\BlogBundle\Entity``. Comme le chargement automatique de Symfony2 supporte le `standard PSR-4 <http://www.php-fig.org/psr/psr-4/>`_, l'espace de nom reflète directement la structure de répertoires du bundle. La classe d'entité ``Enquiry`` est située dans ``src/Blogger/BlogBundle/Entity/Enquiry.php``, ce qui permet à Symfony2 de charger cette classe automatiquement de manière correcte.
 
     Comment le chargeur automatique de Symfony2 sait que l'espace de nom ``Blogger`` se trouve dans le répertoire ``src`` ?
-    C'est grâce à la configuration du chargement automatique dans ``app/autoloader.php``
+    C'est grâce à la configuration du chargement automatique dans ``composer.json``, à la racine du projet
 
-    .. code-block:: php
+    .. code-block:: js
 
-        // app/autoloader.php
-        $loader->registerNamespaceFallbacks(array(
-            __DIR__.'/../src',
-        ));
+        // composer.js
+        "autoload": {
+            "psr-4": { "": "src/" },
+            "classmap": [ "app/AppKernel.php", "app/AppCache.php" ]
+        },
 
-    Cette ligne de code enregistre les répertoires à utiliser pour tous les espaces de noms qui ne sont pas enregistrés. Comme l'espace de nom ``Blogger`` n'est pas enregistré, le chargement automatique des classes de Symfony2 va chercher les fichiers requis dans le répertoire ``src``
+    composer utilise ces informations de configuration lorsqu'il génère le fichier vendor/autoload.php. Ce fichier essentiel est inclus au démarrage de notre application, dans les fichiers web/app.php et web/app_dev.php.
+
+    Ce fichier autoload.php enregistre les répertoires à utiliser pour tous les espaces de noms qui ne sont pas enregistrés. Comme l'espace de nom ``Blogger`` n'est pas enregistré, le chargement automatique des classes de Symfony2 va chercher les fichiers requis dans le répertoire ``src``.
 
     Le chargement automatique et les espaces de nom sont des concepts très puissant dans Symfony2. Si vous avez des problèmes dans lesquels PHP n'arrivent pas à trouver une ou plusieurs classes, il y a des chances pour qu'il y ait des erreurs dans votre espace de nom ou dans votre structure de répertoires. Vérifiez également que les espaces de nom soient bien enregistrés dans le chargeur comme vu au dessus. Vous ne devriez jamais être tentés de ``réparer`` celà en utilisant les directives PHP ``require`` ou ``include``.
 
@@ -194,16 +197,20 @@ Créez un nouveau fichier dans ``src/Blogger/BlogBundle/Form/EnquiryType.php`` e
     namespace Blogger\BlogBundle\Form;
 
     use Symfony\Component\Form\AbstractType;
-    use Symfony\Component\Form\FormBuilder;
+    use Symfony\Component\Form\FormBuilderInterface;
+    use Symfony\Component\Form\Extension\Core\Type\EmailType;
+    use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+    use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
     class EnquiryType extends AbstractType
     {
-        public function buildForm(FormBuilder $builder, array $options)
+        public function buildForm(FormBuilderInterface $builder, array $options)
         {
             $builder->add('name');
-            $builder->add('email', 'email');
+            $builder->add('email', EmailType::class);
             $builder->add('subject');
-            $builder->add('body', 'textarea');
+            $builder->add('body', TextareaType::class);
+            $builder->add('submit', SubmitType::class);
         }
 
         public function getName()
@@ -211,6 +218,7 @@ Créez un nouveau fichier dans ``src/Blogger/BlogBundle/Form/EnquiryType.php`` e
             return 'contact';
         }
     }
+
 
 La classe ``EnquiryType`` nous permet de présenter la classe ``FormBuilder``. la classe ``FormBuilder`` est votre meilleur atout lorsqu'il est question de créer des formulaires.
 Elle est capable de simplifier le processus de définition des champs à partir des métadonnées qu'un champ possède. Comme notre entité est très simple, nous n'avons défini aucune métadonnée, donc le ``FormBuilder`` va créer des champs de texte par défaut. C'est adapté à la plupart des champs, sauf pour le corps du message pour lequel nous souhaitons utiliser une ``textarea``, et pour l'adresse email pour laquelle nous allons utiliser le nouveau champ d'adresse email proposé par l'HTML5.
@@ -230,19 +238,15 @@ Nous avons désormais défini l'entité ``Enquiry`` et la classe ``EnquiryType``
     public function contactAction()
     {
         $enquiry = new Enquiry();
-        $form = $this->createForm(new EnquiryType(), $enquiry);
 
-        $request = $this->getRequest();
-        if ($request->getMethod() == 'POST') {
-            $form->bindRequest($request);
+        $form = $this->createForm(EnquiryType::class, $enquiry);
 
-            if ($form->isValid()) {
-                // Perform some action, such as sending an email
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Perform some action, such as sending an email
 
-                // Redirect - This is important to prevent users re-posting
-                // the form if they refresh the page
-                return $this->redirect($this->generateUrl('BloggerBlogBundle_contact'));
-            }
+            // Redirect - This is important to prevent users re-posting
+            // the form if they refresh the page
+            return $this->redirect($this->generateUrl('BloggerBlogBundle_contact'));
         }
 
         return $this->render('BloggerBlogBundle:Page:contact.html.twig', array(
@@ -308,18 +312,10 @@ Pour notre formulaire de contacts, nous allons opter pour un compromis. Remplace
 
         <p>Want to contact symblog?</p>
 
-        <form action="{{ path('BloggerBlogBundle_contact') }}" method="post" {{ form_enctype(form) }} class="blogger">
-            {{ form_errors(form) }}
+        {{ form_start(form) }}
+        {{ form_widget(form) }}
+        {{ form_end(form) }}
 
-            {{ form_row(form.name) }}
-            {{ form_row(form.email) }}
-            {{ form_row(form.subject) }}
-            {{ form_row(form.body) }}
-
-            {{ form_rest(form) }}
-
-            <input type="submit" value="Submit" />
-        </form>
     {% endblock %}
 
 Comme vous pouvez le voir, nous utilisons 4 nouvelles fonctions Twig pour afficher notre formulaire.
