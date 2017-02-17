@@ -497,31 +497,38 @@ Bien que notre formulaire nous permettre actuellement de soumettre des requêtes
 Configurer les paramètres de Swift Mailer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Swift Mailer est déjà configurée de base dans la distribution standard de Symfony2, néanmoins nous devons configurer quelques paramètres concernant la méthode d'envoi, et lui fournir les accréditations nécessaires pour réaliser cette tâche. Ouvrez le fichier de paramètres dans  ``app/parameters.ini`` et trouvez les paramètres préfixés par ``mailer_``.
+Swift Mailer est déjà configurée de base dans la distribution standard de Symfony2, néanmoins nous devons configurer quelques paramètres concernant la méthode d'envoi, et lui fournir les accréditations nécessaires pour réaliser cette tâche. Ouvrez le fichier de paramètres dans  ``app/config/parameters.yml`` et trouvez les paramètres préfixés par ``mailer_``.
 
 .. code-block:: text
 
-    mailer_transport="smtp"
-    mailer_host="localhost"
-    mailer_user=""
-    mailer_password=""
+    mailer_user: null
+    mailer_password: null
 
 Swift Mailer propose un certain nombre de méthodes pour envoyer les emails, entre autre l'utilisation d'un serveur SMTP, l'installation locale de sendmail, ou même l'utilisation d'un compte GMail. Par souci de simplicité, c'est cette dernière méthode que nous allons utiliser. Mettez à jour les paramètres comme suit, en remplaçant votre nom d'utilisateur (username) et votre mot de passe (password) lorsque c'est nécessaire.
 
 .. code-block:: text
 
-    mailer_transport="gmail"
-    mailer_encryption="ssl"
-    mailer_auth_mode="login"
-    mailer_host="smtp.gmail.com"
-    mailer_user="your_username"
-    mailer_password="your_password"
+    mailer_user: "your_gmailusername"
+    mailer_password: "your_gmailpassword"
+
+En cas de problèmes (emails non envoyés par exemple), vous pourrez trouver plus d'informations au sujet de l'envoi d'email avec GMail dans la `documentation officielle <http://symfony.com/doc/current/email/gmail.html>`_.
 
 .. warning::
 
     Faites attention si vous utilisez un système de contrôle de version (SCV) tel que Git pour votre projet, en particulier si votre dépôt est accessible publiquement à n'importe qui. Vous devriez vous assurer que les fichiers contenant des informations sensibles, tel que 
-    ``app/parameters.ini``, sont dans la liste des fichier à ignorer. Une approche courante consiste à suffixer le nom de fichier qui a des informations sensibles, tel que ``app/parameters.ini``, avec ``.dist``.
-    Vous pouvez alors proposer des valeurs par défaut pour les paramètres sensibles dans ce fichier, et l'ajouter à votre gestionnaire de version, pendant que le vrai fichier, par exemple ``app/parameters.ini`` est inclus dans la liste de ceux à ignorer. Vous pouvez alors déployer les fichiers  ``*.dist`` avec votre projet et permettre aux développeurs de supprimer l'extension .dist et renseigner les paramètres requis.
+    ``app/config/parameters.yml``, sont dans la liste des fichier à ignorer. Une approche courante consiste à suffixer le nom de fichier qui a des informations sensibles, tel que ``app/parameters.ini``, avec ``.dist``. C'est ce que fait symfony, qui propose un fichier app/config/parameters.yml.dist contenant les paramètres à configurer, avec des valeurs par défaut. Ce fichier est inclus dans la gestion de version, et les développeurs peuvent le copier et renseigner les paramètres requis. 
+
+Nous allons maintenant modifier la configuration du service d'envoi d'email, app/config/config.yml, pour utiliser ces paramètres et
+
+.. code-block:: text
+    
+    # app/config/config.yml
+    # Swiftmailer Configuration
+    swiftmailer:
+        transport: gmail
+        username:  '%mailer_user%'
+        password:  '%mailer_password%'
+
 
 Mise à jour du contrôleur
 ~~~~~~~~~~~~~~~~~~~~~~~~~
